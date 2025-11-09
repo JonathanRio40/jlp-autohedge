@@ -1,8 +1,18 @@
 {
-  "valeurJLP_USD": 56700,
-  "shortsActuels": { "SOL": 23392.5, "BTC": 6274.8, "ETH": 4005.5 },
+  "valeurJLP_USD": 56702.33,
+  "shortsActuels": {
+    "SOL": 23392.50,
+    "BTC": 6274.84,
+    "ETH": 4005.54
+  },
   "levier": 1,
   "seuilRel": 0.01,
   "seuilAbsBps": 50,
-  "weights": { "SOL": 0.4631, "ETH": 0.0795, "BTC": 0.1325, "USDC": 0.3248 }
+  "weights": {
+    "SOL": 0.4631,
+    "ETH": 0.0795,
+    "BTC": 0.1325,
+    "USDC": 0.3248
+  },
+  "initialCapitalUSD": 58784.03
 }
