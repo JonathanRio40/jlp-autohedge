@@ -1,0 +1,8 @@
+{
+  "name": "jlp-autohedge",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dryrun": "node script/index.js"
+  }
+}
