@@ -1,0 +1,10 @@
+name: Runner ping
+on: { workflow_dispatch: {} }
+
+jobs:
+  ping:
+    runs-on: [self-hosted, macOS, jlp]
+    steps:
+      - name: Say hello
+        run: |
+          echo "Runner OK sur $(uname -a)"
