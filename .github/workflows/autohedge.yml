@@ -31,16 +31,24 @@ jobs:
           echo "Host=$(hostname) User=$USER"
           test -f "$WALLET_KEYPATH" && echo "Wallet OK" || (echo "Wallet introuvable"; exit 1)
 
-      - name: Dry run
-        if: ${{ github.event_name == 'schedule' || inputs.mode == 'dry-run' }}
+           - name: Dry run
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'dry-run' }}
         run: |
+          echo "== DEBUG: contenu repo =="
+          ls -la
+          echo "== Aperçu run.sh =="
+          head -n 40 run.sh || true
+          echo "== Type de run.sh =="
+          file run.sh || true
+          echo "== Lancement =="
           chmod +x ./run.sh || true
           source ./runner.env 2>/dev/null || true
-          ./run.sh --dry-run
+          bash ./run.sh --dry-run
 
       - name: Live
         if: ${{ inputs.mode == 'live' }}
         run: |
           chmod +x ./run.sh || true
           source ./runner.env 2>/dev/null || true
-          ./run.sh
+          bash ./run.sh
+
