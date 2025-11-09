@@ -2,7 +2,7 @@ name: dryrun-autohedge
 on:
   schedule:
     - cron: "*/5 * * * *"     # toutes les 5 minutes
-  workflow_dispatch: {}        # bouton pour lancer à la main
+  workflow_dispatch: {}        # bouton manuel
 
 jobs:
   run:
@@ -14,4 +14,3 @@ jobs:
           node-version: '20'
       - name: Lancer le dry-run
         run: node script/index.js
-
