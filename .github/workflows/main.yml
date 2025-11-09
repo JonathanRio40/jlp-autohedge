@@ -13,4 +13,5 @@ jobs:
         with:
           node-version: '20'
       - name: Lancer le dry-run
-        run: npm run dryrun
+        run: node script/index.js
+
