@@ -6,19 +6,25 @@ on:
         description: dry-run ou live
         required: true
         default: dry-run
+      confirm_live:
+        description: Tape YES pour exécuter en live
+        required: false
+        default: ""
   schedule:
     - cron: "*/30 * * * *"
 
 env:
+  RUN_SCRIPT_PATH: ./run.sh
+
   RPC_URL: ${{ vars.RPC_URL || 'https://api.mainnet-beta.solana.com' }}
   WALLET_KEYPATH: ${{ vars.WALLET_KEYPATH || '/Users/jonathan/.keys/jlp-exec.json' }}
-  DRIFT_USER_ID: ${{ vars.DRIFT_USER_ID || 'CHANGE_ME' }}
+  DRIFT_USER_ID: ${{ vars.DRIFT_USER_ID || 'MISSING' }}
   DRIFT_SUBACCOUNT_ID: ${{ vars.DRIFT_SUBACCOUNT_ID || '0' }}
   TARGET_LEVERAGE: ${{ vars.TARGET_LEVERAGE || '2' }}
-  HEDGE_EXCHANGE: 'drift'
-  JLP_WEIGHTS_SOURCE: ${{ vars.JLP_WEIGHTS_SOURCE || 'https://example.com/jlp_weights.json' }}
   SLIPPAGE_BPS: ${{ vars.SLIPPAGE_BPS || '20' }}
   MAX_REHEDGE_INTERVAL_SEC: ${{ vars.MAX_REHEDGE_INTERVAL_SEC || '900' }}
+  POSITION_JLP_USD: ${{ vars.POSITION_JLP_USD || '0' }}
+  JLP_WEIGHTS_SOURCE: ${{ vars.JLP_WEIGHTS_SOURCE || '' }}
 
 jobs:
   hedge:
@@ -26,29 +32,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Préflight
-        run: |
-          echo "Host=$(hostname) User=$USER"
-          test -f "$WALLET_KEYPATH" && echo "Wallet OK" || (echo "Wallet introuvable"; exit 1)
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
-           - name: Dry run
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'dry-run' }}
+      - name: Préflight & debug
         run: |
-          echo "== DEBUG: contenu repo =="
+          set -e
+          echo "Host=$(hostname)  User=$USER  PWD=$PWD"
           ls -la
-          echo "== Aperçu run.sh =="
-          head -n 40 run.sh || true
-          echo "== Type de run.sh =="
-          file run.sh || true
-          echo "== Lancement =="
-          chmod +x ./run.sh || true
-          source ./runner.env 2>/dev/null || true
-          bash ./run.sh --dry-run
+          echo "--- ENV (clés principales) ---"
+          echo "DRIFT_USER_ID=$DRIFT_USER_ID"
+          echo "DRIFT_SUBACCOUNT_ID=$DRIFT_SUBACCOUNT_ID"
+          echo "WALLET_KEYPATH=$WALLET_KEYPATH"
+          echo "RPC_URL=$RPC_URL"
+          echo "POSITION_JLP_USD=$POSITION_JLP_USD"
+          echo "JLP_WEIGHTS_SOURCE=$JLP_WEIGHTS_SOURCE"
+          test -f "$RUN_SCRIPT_PATH" || (echo "ERREUR: $RUN_SCRIPT_PATH introuvable"; exit 1)
+          test -f "$WALLET_KEYPATH" || (echo "ERREUR: Wallet introuvable ($WALLET_KEYPATH)"; exit 1)
+          if [ -n "$JLP_WEIGHTS_SOURCE" ]; then
+            echo "--- HEAD JLP_WEIGHTS_SOURCE ---"
+            curl -sSIL "$JLP_WEIGHTS_SOURCE" || true
+            echo "--- Début contenu ---"
+            curl -sS "$JLP_WEIGHTS_SOURCE" | head -n 20 || true
+          else
+            echo "ATTENTION: JLP_WEIGHTS_SOURCE non défini"
+          fi
+
+      - name: Dry-run
+        if: ${{ github.event.inputs.mode != 'live' }}
+        run: |
+          chmod +x "$RUN_SCRIPT_PATH" || true
+          bash "$RUN_SCRIPT_PATH" --dry-run
 
       - name: Live
-        if: ${{ inputs.mode == 'live' }}
+        if: ${{ github.event.inputs.mode == 'live' && github.event.inputs.confirm_live == 'YES' }}
         run: |
-          chmod +x ./run.sh || true
-          source ./runner.env 2>/dev/null || true
-          bash ./run.sh
-
+          chmod +x "$RUN_SCRIPT_PATH" || true
+          bash "$RUN_SCRIPT_PATH"
