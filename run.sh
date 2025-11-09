@@ -19,4 +19,4 @@ if ! command -v node >/dev/null 2>&1; then
 fi
 
 # Ex: POSITION_JLP_USD peut être passé via env GitHub (vars/secrets)
-node ./script/v5/engine.js "$MODE"
+node ./script/v5/engine.cjs "$MODE"
